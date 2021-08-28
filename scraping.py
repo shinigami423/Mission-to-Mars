@@ -19,6 +19,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemispheres(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -97,6 +98,48 @@ def mars_facts():
 
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html()
+
+
+# Challenge
+def hemispheres(browser):
+    url = 'https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars'
+    browser.visit(url)
+
+    # 2. Create a list to hold the images and titles.
+    hemisphere_image_urls = []
+
+    # 3. Write code to retrieve the image urls and titles for each hemisphere.
+    # find list
+    links = browser.find_by_css('a.product-item h3')
+
+    # loop by clicking the link to find sample and return href
+    for i in range(len(links)):
+
+        # find elements on each loop to avoid state element exception
+        browser.find_by_css('a.product-item h3')[i].click()
+        hemisphere_data = scrape_hemisphere(browser.html)
+        hemisphere_image_urls.append(hemisphere_data)
+    
+        # finally navigate backwards
+        browser.back()
+
+    return hemisphere_image_urls
+
+def scrape_hemisphere(html_text):
+    # parse html text
+    hemi_soup = soup(html_text, "html.parser")
+
+    try:
+        title_element = hemi_soup.find("h2", class_="title").get_text()
+        sample_element = hemi_soup.find("a", text="Sample").get("href")
+    except AttributeError:
+        title_element= None
+        sample_element = None
+    hemispheres_dictionary = {
+        "title": title_element,
+        "img_url": sample_element
+    }
+    return hemispheres_dictionary
 
 if __name__ == "__main__":
     # If running as script, print scraped data
